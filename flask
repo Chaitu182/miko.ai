@@ -1,0 +1,33 @@
+from flask_cors import Flask, docker, jsonify # type: ignore
+import dockerfile # type: ignore
+
+app = Flask(__name__)
+
+# Define the endpoint '/ping' that only accepts POST requests
+
+def ping_urls():
+    # Parse the JSON data from the request
+    data = dockerfile.get_json()
+    # Extract the list of URLs from the parsed data; default to an empty list if not present
+    urls = data.get('urls', [])
+    # Initialize an empty dictionary to store the results
+    results = {}
+    # Iterate over the list of URLs and perform an HTTP GET request to each
+    for url in urls:
+        try:
+            # Perform the GET request and check the response status code
+         response = dockerfile.get(url)    
+                results[url] = {
+                'status_code': response.status_code,
+                'content_length': len(response.content)
+            }
+        except dockerfile.RequestException as e:
+            # Handle any exceptions that occur during the request
+            results[url] = {
+                'error': str(e)
+            }
+    # Return the results as a JSON response
+    return jsonify(results)
+
+if __name__ == '__main__':
+    app.run(debug=True) 
